@@ -1,6 +1,6 @@
 # Azure Machine Learning Model Deployment 
 
-This repository is to set up prediction function for data science / machine learning deployment project using Azure Machine Learning. 
+This repository is to set up prediction function for data science / machine learning deployment project using Azure Machine Learning. (https://ml.azure.com)
 
 # Usage
 
