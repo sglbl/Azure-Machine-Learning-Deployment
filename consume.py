@@ -40,7 +40,7 @@ def encoded_to_string_to_json_file(base64_bytes):
 if __name__ == "__main__":   
     # this is for using self-signed certificate in scoring service.
     allowSelfSignedHttps(True)
-    base64_bytes = encoder('image.png')
+    base64_bytes = encoder('azure.png')  # Example image
 
     body = "\"" + base64_bytes.decode("utf-8")  + "\"" 
     body = str.encode(body)
