@@ -1,16 +1,13 @@
 import io
-import os
 import json
 import numpy as np
 import tensorflow as tf
 import cv2 as cv
 from PIL import Image
-import requests
 import base64
-from azureml.contrib.services.aml_request import rawhttp
-from azureml.contrib.services.aml_response import AMLResponse
- 
-# from django.core.files.base import ContentFile
+import logging
+import azure.functions as func
+
 
 class InferenceModel():
     def __init__(self, model_path):
@@ -19,13 +16,8 @@ class InferenceModel():
  
  
     def face_border_detector(self, image):
-        # download xml from server
-        link = "https://www.studenti.famnit.upr.si/~76210123/76210123/xml/haarcascade_frontalface_default2.xml"
-        r = requests.get(link, allow_redirects=True)
-        open('haarcascade_frontalface_default2.xml', 'wb').write(r.content)
-        # end of download      
-        
-        face_cascade = cv.CascadeClassifier('haarcascade_frontalface_default2.xml')
+        # get xml from repo
+        face_cascade = cv.CascadeClassifier('models/haarcascade_frontalface_default.xml')
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         biggest_face = [0,0,0,0]
@@ -65,36 +57,36 @@ class InferenceModel():
 def int32_to_int(obj):
     if isinstance(obj, np.integer):
         return int(obj)
+    
 
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+    
+    headers = {
+        "Content-type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+    }
+        
+    model_path = req.params.get('model_path')
+    image = req.params.get('image')
+    if not model_path:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            model_path = req_body.get('model_path')
+            image = req_body.get('image')    
 
-def init():
+    # Model path will be get by flutter function
     global model
-    model_name = "age_model_a"
-    model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), model_name)
-    model = InferenceModel(model_path)
-
-
-@rawhttp
-def run(request):
-    if request.method != 'POST':
-        return AMLResponse(f"Unsupported verb: {request.method}", 400)
-  
-    # exc_occured = False
-    # try:
-    #     req_body = request.get_data(False)    
-    #     preds = model.predict(req_body)
-    # except Exception as e:
-    #     print("Exception occured in get_data(): ", e)
-    #     exc_occured = True        
+    model = InferenceModel(model_path)        
+    preds = model.predict(image)
+    # preds = model.predict(req_body)
+    results = json.dumps({"preds": preds}, default=int32_to_int)
     
-    req_body = request.get_data(False)    
-    # preds = model.predict(req_body["image"])
-    print(req_body[:25])
-    preds = model.predict(req_body)
-
-    dumped_preds = json.dumps({"preds": preds}, default=int32_to_int)
-    return AMLResponse(dumped_preds, 200)
-    
+    return func.HttpResponse(json.dumps(results), headers=headers)
+   
 
 # def encoder(self, image_src):
 #     # with open(image_src, "rb") as image_file:

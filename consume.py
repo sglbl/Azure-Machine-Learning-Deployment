@@ -40,15 +40,15 @@ def encoded_to_string_to_json_file(base64_bytes):
 if __name__ == "__main__":   
     # this is for using self-signed certificate in scoring service.
     allowSelfSignedHttps(True)
-    base64_bytes = encoder('image.png')
-
+    base64_bytes = encoder('image.jpg')
+    
     body = "\"" + base64_bytes.decode("utf-8")  + "\"" 
     body = str.encode(body)
 
     # Endpoint URL
     url = 'https://ep-try3.southcentralus.inference.ml.azure.com/score'
     # AMLToken key for the endpoint
-    api_key = 'API_KEY'
+    api_key = '54rcDiIWtOGoZHrpe84qbsBKj5zcjT6E'
     if not api_key:
         raise Exception("A key should be provided to invoke the endpoint")
 
